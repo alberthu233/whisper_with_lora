@@ -16,7 +16,7 @@
 
 ## Background
 ### Fine-Tuning and Parameter-Efficient Adaptation
-- Traditional Fine-Tuning
+- Fine-Tuning
   - Update all model parameters during adaptation
   - Requires storing a separate copy of the model for each downstream task
   - Expensive for large models like GPT-3
@@ -31,14 +31,10 @@
     - Insert additional layers between pre-trained weights
     - Capture task-specific information
     - Increase inference latency due to additional computations
-  - Prompt-Based Methods (Li and Liang 2021)
+  - Prompt-Based Methods Prefix-tuning (Li and Liang 2021)
     - Optimize continuous prompts to steer model's behavior
     - Do not modify model weights
     - Reduce available sequence length for input tokens
-  - Limitations of Existing Techniques
-    - Increased inference latency (Adapter Layers)
-    - Reduced sequence length (Prompt-Based Methods)
-    - Need for more efficient adaptation methods
 
 <p align="center">
   <table>
@@ -157,6 +153,17 @@ for layer in model.encoder.blocks:
     if args.lora_v:
         layer.attn.value = replace_lora(layer.attn.value)
 ```
+Question 1: In the Transformer architecture, which components would be most effective to apply LoRA to, and why? $W_q, W_k, W_v, W_o$, or all of them?
+
+Hint: Consider the role of different components in the Transformer and their impact on capturing task-specific information.
+
+<details>
+  <summary>Answer </summary>
+  
+  Answer: Applying LoRA to the $W_q, W_v$ matrices in the attention mechanism would be most effective. (section 7.1)
+  ![Diagram](images/10.png)
+</details>
+
 
 When we print the model, the attention layer looks like this:
 ```
@@ -244,3 +251,4 @@ arXiv:2101.00190 [cs], January 2021. URL http://arxiv.org/abs/2101.00190.
   ```bash
   python src/train.py --model lora --rank 8 --alpha 8
   ```
+- The Rank decompesition https://en.wikipedia.org/wiki/Rank_factorization
