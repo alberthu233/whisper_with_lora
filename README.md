@@ -105,12 +105,13 @@ When optimizing with Adam, $\alpha$ is set to the first ${r}$ and do not tune it
   - Binary classification task
   - Detecting gravitational wave signals from noise
   - 1,000 training samples and 1,000 validation samples
+
 - Model: Whisper Encoder(Transformer-based model) + Classification Head
 - Adaptation Techniques Compared:
   - Full Fine-Tuning
   - Freeze Encoder Part of Model
   - LoRA
-- Evaluation Metrics: Classification AUC
+- Evaluation Metrics: Binary AUC
 
 ### Implementation Details
 - Step to implementation of LoRA from scratch in PyTorch
@@ -161,6 +162,7 @@ Hint: Consider the role of different components in the Transformer and their imp
   <summary>Answer </summary>
   
   Answer: Applying LoRA to the $W_q, W_v$ matrices in the attention mechanism would be most effective. (section 7.1)
+  
   ![Diagram](images/10.png)
 </details>
 
