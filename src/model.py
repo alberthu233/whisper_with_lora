@@ -78,9 +78,7 @@ class LoRa_linear(torch.nn.Module):
     def __init__(self, linear, rank, alpha):
         super().__init__()
         self.linear = linear
-        self.lora = LoRA_layer(
-            linear.in_features, linear.out_features, rank, alpha
-        )
+        self.lora = LoRA_layer(linear.in_features, linear.out_features, rank, alpha)
 
     def forward(self, x):
         return self.linear(x) + self.lora(x)
