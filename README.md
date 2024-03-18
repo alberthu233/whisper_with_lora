@@ -68,32 +68,39 @@ Here is how lora looks like for an actual matrix:
 
 During the LoRa initilization, the paper use a random Gaussian initialization for A and zero for B, so $\Delta W = BA$ is zero at the beginning of training. 
 
-We then scale $\Delta Wx$ by $\frac{\alpha}{r}$, where $\alpha$ is a constant in $\mathbb{R}$. 
+And then scale $\Delta Wx$ by $\frac{\alpha}{r}$, where $\alpha$ is a constant in $\mathbb{R}$. 
 
-When optimizing with Adam, tuning \alpha is roughly the same as tuning the learning rate if we scale the initialization appropriately. As a result, we simply set \alpha to the first \{r} we try and do not tune it. This scaling helps to reduce the need to retune hyperparameters when we vary r （yang 2021）.
+When optimizing with Adam, $\alpha$ is set to the first ${r}$ and do not tune it. This scaling helps to reduce the need to retune hyperparameters when vary ${r}$.
+
 ### Advantages of LoRA
+- Parameter Efficiency: Achieves comparable performance to fine-tuning with fewer trainable parameters
+- Reduced Storage and Deployment Costs: Stores only small low-rank update matrices for each task, instead of full model copies
+- Efficient Task Switching: Enables quick switching between tasks by swapping LoRA matrices
+- Reduced Training and Inference Latency: Optimizes only low-rank matrices during training and merges them with pre-trained weights for inference
+- Compatibility: Can be combined with other adaptation methods like prefix-tuning or adapter layers
 
 
 ### Formal pseudocode for LoRA
+- **Input:**
+  - Pre-trained weight matrix: $W_0 \in \mathbb{R}^{d \times k}$
+  - Input vector: $x \in \mathbb{R}^d$
+- **Output:**
+  - Updated output vector: $h \in \mathbb{R}^k$
+- **Hyperparameters:**
+  - Rank: $r \in \mathbb{N}, r \ll \min(d, k)$
+  - Scaling factor: $\alpha \in \mathbb{R}$
+- **Parameters:**
+  - Low-rank matrices: $A \in \mathbb{R}^{r \times k}, B \in \mathbb{R}^{d \times r}$
 
-$$
-\begin{algorithmic}
+1. Initialize update matrix: $\Delta W \gets 0_{d \times k}$
+2. For $i = 1$ to $r$:
+   - For $j = 1$ to $k$:
+     - Update $\Delta W_{:, j} \gets \Delta W_{:, j} + B_{:, i} \cdot A_{i, j}$
+3. Update weight matrix: $W \gets W_0 + \frac{\alpha}{r}\Delta W$
+4. Compute final output: $h \gets W \cdot x$
+5. **Return** updated output vector $h$
 
-\REQUIRE A pre-trained weight matrix $\mathbf{W} \in \mathbb{R}^{d \times k}$.
-\REQUIRE $\mathbf{A} \in \mathbb{R}^{r \times k}$, $\mathbf{B} \in \mathbb{R}^{d \times r}$ with $r \ll \min(d, k)$.
-\REQUIRE Input vector $\mathbf{x} \in \mathbb{R}^k$.
-\ENSURE Updated output vector $\mathbf{h}$.
 
-\STATE $\Delta\mathbf{W} \gets \mathbf{B}\mathbf{A}$
-\STATE $\mathbf{h} \gets (\mathbf{W} + \Delta\mathbf{W})\mathbf{x}$
-\STATE $\mathbf{h} \gets \mathbf{W}\mathbf{x} + \mathbf{B}(\mathbf{A}\mathbf{x})$
-
-\COMMENT{During training, $\mathbf{W}$ is frozen and does not receive gradient updates. Only $\mathbf{A}$ and $\mathbf{B}$ are trained.}
-
-\COMMENT{Initialize $\mathbf{A}$ and $\mathbf{B}$ with a random Gaussian distribution and scale $\Delta\mathbf{W}$ by a constant $\alpha$.}
-
-\end{algorithmic}
-$$
 
 
 ## Code Demo and Results
@@ -221,6 +228,7 @@ Results of the three adaptation techniques in 20 epochs
 - LoRA opens up new possibilities for efficient adaptation of large models
 
 ## References
+
 Neil Houlsby, Andrei Giurgiu, Stanislaw Jastrzebski, Bruna Morrone, Quentin de Laroussilhe, Andrea Gesmundo, Mona Attariyan, and Sylvain Gelly. Parameter-Efficient Transfer Learning for NLP. arXiv:1902.00751 [cs, stat], June 2019. URL http://arxiv.org/abs/1902.00751.
 
 Greg Yang and Edward J. Hu. Feature Learning in Infinite-Width Neural Networks.arXiv:2011.14522 [cond-mat], May 2021. URL http://arxiv.org/abs/2011.14522. arXiv: 2011.14522.
@@ -231,7 +239,7 @@ arXiv:2101.00190 [cs], January 2021. URL http://arxiv.org/abs/2101.00190.
 
 
 ## Appendix
-- Jupyter Notebook: [lora_example](lora_example.ipynb)
+- Jupyter Notebook: [lora_example.ipynb](lora_example.ipynb)
 - To run the training pipeline, use the following command:
   ```bash
   python src/train.py --model lora --rank 8 --alpha 8
